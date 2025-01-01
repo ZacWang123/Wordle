@@ -3,32 +3,37 @@ import tkinter.messagebox as messagebox
 import random
 import sys
 
-gridEntries = [[None for x in range(5)] for y in range(6)] 
-keyboardEntries = [None for x in range(28)]
-word = ""
-row = 0
-col = 0
+def initialise_variables():
+    global gridEntries, keyboardEntries, word, row, col, gameActive 
+    
+    gridEntries = [[None for x in range(5)] for y in range(6)] 
+    keyboardEntries = [None for x in range(28)]
+    word = ""
+    row = 0
+    col = 0
+    gameActive = True
 
 def start_gameloop(window):
     enable_entry(row, col)
-    window.after(1, game_intervels, window)
+    window.after(5, game_intervels, window)
     
 def game_intervels(window):
-    global row
-    global col
+    global row, col, gameActive
     
-    if col < 5:
-        if (gridEntries[row][col].get() != ""):
-            disable_entry(row, col)
-            col += 1
-            if col < 5:
-                enable_entry(row, col)
-    
-    window.after(20, game_intervels, window)
+    if gameActive:
+        if col < 5:
+            if (gridEntries[row][col].get() != ""):
+                disable_entry(row, col)
+                col += 1
+                if col < 5:
+                    enable_entry(row, col)
+        
+        window.after(20, game_intervels, window)
+    else:
+        return
     
 def button_click(letter):
-    global row
-    global col
+    global row, col
     
     if col < 5:
         if (gridEntries[row][col].get() == ""):
@@ -72,8 +77,7 @@ def create_buttons(window):
     keyboardEntries[27] = backButton
     
 def enter_button(window):
-    global row
-    global col
+    global row, col
 
     if col == 5:
         if not validate_word():
@@ -88,8 +92,7 @@ def enter_button(window):
             enable_entry(row, col)
             
 def backspace_button():
-    global row
-    global col
+    global row, col
     
     if col > 0:
         if col < 5:
@@ -198,8 +201,7 @@ def invalid_word_popup(window):
     popup.after(500, popup.destroy)
     
 def detect_enter(event, x, y, window):
-    global row
-    global col
+    global row, col
     
     if col == 5:
         if not validate_word():
@@ -255,15 +257,51 @@ def check_row(row, window):
 def end_game(status, window):
     global word
     
+    msg = ""
+    
     if status == "win":
-        messagebox.showinfo("Win", "Congratulations you have won")
+        msg = "Congratulations you have won"
+    elif status == "lose":
+        msg = "The word was " + word
+        
+    popup = Toplevel(window)
+    popup.title("Game Over")
     
-    if status == "lose":
-        messagebox.showinfo("Lose", "The word was " + word)
+    popup_width = 500
+    popup_height = 200
     
-    window.quit()
-    sys.exit()
-            
+    screenWidth = window.winfo_screenwidth()
+    screenHeight = window.winfo_screenheight()
+
+    positionX = int(screenWidth / 2 - popup_width/2)
+    positionY = int(screenHeight / 2 - popup_height/2)
+    
+    popup.geometry(f"{popup_width}x{popup_height}+{positionX}+{positionY}")
+    
+    label = Label(popup, text = msg, font=("Arial", 12))
+    label.pack(pady=20)
+    
+    def restart_game():
+        global gameActive
+        
+        gameActive = False
+        popup.destroy()
+        window.quit()
+        window.destroy()
+        main()
+        
+    def exit_game():
+        popup.destroy()
+        window.quit()
+        sys.exit()
+    
+    playAgainBTN = Button(popup, text="Play Again", command = restart_game, width = 15, height = 2)
+    playAgainBTN.pack(side=LEFT, padx=20, pady=10)
+    
+    exitBTN = Button(popup, text = "Exit", command = exit_game, width = 15, height = 2)
+    exitBTN.pack(side = RIGHT, padx = 20, pady = 10)
+    
+    
 def upper_case(event, x, y):
     gridEntries[x][y].delete(0, END)
     char = event.char.upper()
@@ -292,6 +330,8 @@ def create_window():
     return window
     
 def main():
+    initialise_variables()
+    
     window = create_window()
     
     create_letterbox(window)
@@ -299,6 +339,9 @@ def main():
     create_buttons(window)
     
     generate_word()
+    
+    global word
+    print(word)
     
     start_gameloop(window)
         
