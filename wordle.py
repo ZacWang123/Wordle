@@ -212,8 +212,9 @@ def detect_enter(event, x, y, window):
             row += 1
             if row == 6:
                 end_game("lose", window)
-            col = 0
-            enable_entry(row, col)
+            else:
+                col = 0
+                enable_entry(row, col)
             
 def check_row(row, window):
     global word
@@ -255,10 +256,10 @@ def check_row(row, window):
         end_game("win", window)
     
 def end_game(status, window):
-    global word
+    global word, gameActive
     
     msg = ""
-    
+    gameActive = False
     if status == "win":
         msg = "Congratulations you have won"
     elif status == "lose":
@@ -282,9 +283,6 @@ def end_game(status, window):
     label.pack(pady=20)
     
     def restart_game():
-        global gameActive
-        
-        gameActive = False
         popup.destroy()
         window.quit()
         window.destroy()
@@ -339,9 +337,6 @@ def main():
     create_buttons(window)
     
     generate_word()
-    
-    global word
-    print(word)
     
     start_gameloop(window)
         
